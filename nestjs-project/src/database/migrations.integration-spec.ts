@@ -36,6 +36,12 @@ describe('Database migrations (integration)', () => {
         dataSource.query(`DROP TABLE IF EXISTS "${table}" CASCADE`),
       ),
       dataSource.query(`DROP TABLE IF EXISTS "migrations" CASCADE`),
+      // The enum type is created by the CreateAuthTokens migration and is NOT
+      // removed by `DROP TABLE ... CASCADE`. Drop it explicitly so re-running
+      // the migrations in this suite does not fail with "type already exists".
+      dataSource.query(
+        `DROP TYPE IF EXISTS "verification_tokens_type_enum" CASCADE`,
+      ),
     ]);
   });
 
