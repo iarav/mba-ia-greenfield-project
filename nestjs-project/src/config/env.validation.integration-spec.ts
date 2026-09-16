@@ -6,6 +6,9 @@ const requiredEnv = {
   DB_NAME: 'db',
   JWT_SECRET: 'secret',
   JWT_REFRESH_SECRET: 'refresh-secret',
+  S3_ACCESS_KEY_ID: 'minioadmin',
+  S3_SECRET_ACCESS_KEY: 'minioadmin',
+  S3_BUCKET: 'streamtube',
 };
 
 const validate = (env: Record<string, string>) =>
