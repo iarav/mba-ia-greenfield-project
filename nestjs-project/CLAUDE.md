@@ -34,6 +34,9 @@ docker compose exec nestjs-api npm run start:dev
 Services:
 - `nestjs-api` — NestJS API, port `3000`
 - `db` — PostgreSQL 17, port `5432`, database `streamtube`, user/password `streamtube`
+- `minio` — S3-compatible object storage, ports `9000` (API) / `9001` (console), root user/password `minioadmin`
+- `redis` — Redis 7, port `6379`, backing store for the BullMQ queue
+- `video-worker` — FFmpeg worker that consumes the `video.process` queue
 
 All verification and teardown commands run on the **host machine**:
 
@@ -148,6 +151,14 @@ NestJS with standard module structure. Source lives in `src/`, compiled output i
 
 - Each domain feature gets its own module (e.g., `UsersModule`, `VideosModule`) registered in `AppModule`
 - Controllers handle HTTP routing; Services hold business logic; both are scoped to their module
+
+### Video upload and processing (Phase 03)
+
+- **Module:** `src/videos/` — `VideosModule` with `Video` entity, `VideosController` (`POST /videos`, `POST /videos/:id/complete`, `GET /videos/:slug`, `GET /videos/:slug/metadata`), `VideosService`, `StorageService`, `VideosQueueService`.
+- **Storage:** `StorageService` wraps `@aws-sdk/client-s3` against MinIO (local) / S3 (production). It uses two `S3Client`s — an internal one (`minio:9000`) for the API/worker and a presign one (`localhost:9000`, the browser-reachable `S3_PUBLIC_ENDPOINT`) for signed URLs. Upload is a presigned multipart flow (the API never receives file bytes).
+- **Queue:** BullMQ over Redis. Producer (`VideosQueueService`) enqueues `video.process`; the consumer is the worker.
+- **Worker:** `src/video-worker/` (`VideoProcessor` + `VideoWorkerModule`) bootstrapped by `src/worker.ts` (`npm run start:worker`). It downloads the object, runs `fluent-ffmpeg` (ffprobe for duration/metadata + screenshots for the thumbnail), uploads the thumbnail, and moves the video `draft → processing → ready | error`.
+- **Video status lifecycle:** `draft → processing → ready | error` (PostgreSQL enum `videos_status_enum`), reflected in the `videos` table.
 
 ## Code Conventions
 

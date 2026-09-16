@@ -85,6 +85,17 @@ describe('Swagger endpoints (e2e)', () => {
         .expect(200);
       expect(res.headers['content-type']).toMatch(/yaml/);
     });
+
+    it('documents the video endpoints', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/docs-json')
+        .expect(200);
+      const paths = (res.body as { paths: Record<string, unknown> }).paths;
+      expect(paths).toHaveProperty('/videos');
+      expect(paths).toHaveProperty('/videos/{id}/complete');
+      expect(paths).toHaveProperty('/videos/{slug}');
+      expect(paths).toHaveProperty('/videos/{slug}/metadata');
+    });
   });
 
   describe('when SWAGGER_ENABLED is not set', () => {
