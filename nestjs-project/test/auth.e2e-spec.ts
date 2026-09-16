@@ -60,12 +60,17 @@ describe('Auth (e2e)', () => {
     password = 'password123',
   ): Promise<string> {
     const authService = app.get(AuthService);
-    const mailServiceInstance = (authService as any).mailService;
+    const mailServiceInstance = (
+      authService as unknown as {
+        mailService: { sendConfirmationEmail: jest.Mock };
+      }
+    ).mailService;
     let capturedToken = '';
     jest
       .spyOn(mailServiceInstance, 'sendConfirmationEmail')
-      .mockImplementationOnce(async (_e: string, _n: string, t: string) => {
+      .mockImplementationOnce((_e: string, _n: string, t: string) => {
         capturedToken = t;
+        return Promise.resolve();
       });
     await request(app.getHttpServer())
       .post('/auth/register')
@@ -512,12 +517,17 @@ describe('Auth (e2e)', () => {
 
   async function capturePasswordResetToken(email: string): Promise<string> {
     const authService = app.get(AuthService);
-    const mailServiceInstance = (authService as any).mailService;
+    const mailServiceInstance = (
+      authService as unknown as {
+        mailService: { sendPasswordResetEmail: jest.Mock };
+      }
+    ).mailService;
     let captured = '';
     jest
       .spyOn(mailServiceInstance, 'sendPasswordResetEmail')
-      .mockImplementationOnce(async (_e: string, _n: string, t: string) => {
+      .mockImplementationOnce((_e: string, _n: string, t: string) => {
         captured = t;
+        return Promise.resolve();
       });
     await request(app.getHttpServer())
       .post('/auth/forgot-password')
