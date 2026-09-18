@@ -39,6 +39,7 @@ Rodada de referência (fixture H.264 de ~22 KB, 1 parte):
 - `VideosService.getBySlug` → `findBySlug` — alinhado ao contrato do plano (SI-03.6 §3); ajustes propagados em `videos.controller.ts`, `videos.service.integration-spec.ts`.
 - OpenAPI: respostas de sucesso do `VideosController` extraídas em DTOs (`CreateVideoResponseDto` + `UploadPartDto`, `CompleteUploadResponseDto`, `VideoMetadataResponseDto`) referenciados via `getSchemaPath` + `@ApiExtraModels`, mesmo padrão do `ApiErrorEnvelope`. `buildSwaggerDocument` agora registra os quatro modelos em `extraModels`.
 - BullMQ: `addProcessJob` passou a definir `removeOnComplete: { count: 100 }` e `removeOnFail: { count: 500 }` — impede o Redis de acumular jobs terminados indefinidamente.
+- `package.json` → `test:e2e` — adicionado `--runInBand` (`jest --runInBand --config ./test/jest-e2e.json`); os arquivos e2e (`app`, `auth`, `swagger`, `videos`) dividem o mesmo banco de teste e se atropelam quando rodam em paralelo, então a suíte e2e passa a serializar como o resto da suíte (`test:integration` já usa `--runInBand`).
 - `videos-queue.service.integration-spec.ts` isolado em uma fila dedicada por PID (`video.process.test-<pid>`), evitando que o worker de produção consuma o job durante o teste; adicionado `beforeEach` com `queue.drain(true)`.
 
 ### SI-03.1 — Dependencies e Configuration Namespaces
