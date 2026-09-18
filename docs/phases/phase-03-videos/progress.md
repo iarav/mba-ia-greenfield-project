@@ -3,23 +3,6 @@
 **Status:** completed
 **SIs:** 9/9 completed
 
-## Smoke test manual (end-to-end)
-
-Além da suíte automatizada, o fluxo completo foi exercitado contra a stack Compose real via `nestjs-project/scripts/smoke-upload.sh`, que executa a jornada real do usuário:
-
-1. registro + confirmação (token via API do Mailpit) + login
-2. `POST /videos` para gerar o draft e as URLs presigned por parte
-3. `PUT` binário direto ao MinIO em cada URL (a API nunca vê os bytes)
-4. `POST /videos/:id/complete` com os ETags devolvidos pelo storage
-5. polling em `/videos/:slug/metadata` até `status: ready`
-6. `GET /videos/:slug` (302 → presigned GET) e `GET /videos/:slug?download=true`
-
-Rodada de referência (fixture H.264 de ~22 KB, 1 parte):
-
-- `slug=juaeykzwxsq`, worker preencheu `duration_seconds=2`, `codec_name=h264`, `width=320`, `height=240`, `bit_rate=89204`
-- streaming Location contém `X-Amz-Signature` válido; download Location adiciona `response-content-disposition=attachment`
-- suporte a 10 GiB: `10 GiB / 100 MiB (default part_size) = 103 partes`, dentro do limite S3 (10 000 partes por objeto). O upload de 10 GiB reais não é exercitado por default por questões de tempo/disco, mas o script aceita `./scripts/smoke-upload.sh path/to/big.mp4` para exercitar arquivos arbitrariamente grandes contra o mesmo pipeline.
-
 ## Definition of Done (final run)
 
 - `docker compose exec nestjs-api npx tsc --noEmit` → **exit 0**
